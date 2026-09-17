@@ -11,7 +11,168 @@
     <properties>
         <maven.compiler.source>26</maven.compiler.source>
         <maven.compiler.target>26</maven.compiler.target>
+        <lombok.version>1.18.38</lombok.version>
+        <allure.version>2.29.1</allure.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>7.12.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.javafaker</groupId>
+            <artifactId>javafaker</artifactId>
+            <version>1.0.2</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <version>6.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.22.1</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.xml.ws</groupId>
+            <artifactId>jakarta.xml.ws-api</artifactId>
+            <version>4.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-core</artifactId>
+            <version>4.0.9</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-impl</artifactId>
+            <version>4.0.9</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+            <version>4.0.9</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.ws</groupId>
+            <artifactId>jaxws-ri</artifactId>
+            <version>4.0.5</version>
+            <type>pom</type>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jvnet.jaxb2_commons</groupId>
+            <artifactId>jaxb2-fluent-api</artifactId>
+            <version>3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf.xjc-utils</groupId>
+            <artifactId>cxf-xjc-runtime</artifactId>
+            <version>4.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf.xjcplugins</groupId>
+            <artifactId>cxf-xjc-ts</artifactId>
+            <version>4.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jvnet.jaxb2_commons</groupId>
+            <artifactId>jaxb2-value-constructor</artifactId>
+            <version>3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.20.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-testng</artifactId>
+            <version>${allure.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-codegen-plugin</artifactId>
+                <version>4.2.3</version>
+                <executions>
+                    <execution>
+                        <id>generate-employees</id>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <!--                            <additionalJvmArgs>-Djavax.xml.accessExternalDTD=all -Djavax.xml.accessExternalSchema=all</additionalJvmArgs>-->
+                            <sourceRoot>${project.build.directory}/generated-sources/employees</sourceRoot>
+                            <wsdlOptions>
+                                <wsdlOption>
+                                    <wsdl>${project.basedir}/src/main/resources/employees.wsdl</wsdl>
+                                </wsdlOption>
+                                <!--                                <wsdlOption>-->
+                                <!--                                    <wsdl>some_wsdl_url</wsdl>-->
+                                <!--                                    <extraargs>-->
+                                <!--                                        <extraarg>-validate</extraarg>-->
+                                <!--                                        <extraarg>-xjc-Xfluent-api</extraarg>-->
+                                <!--                                        <extraarg>-xjc-Xts:style:org.apache.commons.lang3.builder.ToStringStyle.DEFAULT_STYLE</extraarg>-->
+                                <!--                                    </extraargs>-->
+                                <!--                                    <bindingFiles>-->
+                                <!--                                        <bindingFile>http://www.w3.org/2001/XMLSchema.xsd</bindingFile>-->
+                                <!--                                    </bindingFiles>-->
+                                <!--                                </wsdlOption>-->
+                            </wsdlOptions>
+                        </configuration>
+                        <goals>
+                            <goal>wsdl2java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jvnet.jaxb2_commons</groupId>
+                        <artifactId>jaxb2-fluent-api</artifactId>
+                        <version>3.0</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.cxf.xjc-utils</groupId>
+                        <artifactId>cxf-xjc-runtime</artifactId>
+                        <version>4.2.0</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.cxf.xjcplugins</groupId>
+                        <artifactId>cxf-xjc-ts</artifactId>
+                        <version>4.2.0</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.jvnet.jaxb2_commons</groupId>
+                        <artifactId>jaxb2-value-constructor</artifactId>
+                        <version>3.0</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.commons</groupId>
+                        <artifactId>commons-lang3</artifactId>
+                        <version>3.20.0</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
