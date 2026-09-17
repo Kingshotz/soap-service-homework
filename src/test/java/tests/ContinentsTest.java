@@ -6,8 +6,6 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 import io.restassured.path.xml.XmlPath;
-import data.models.Continent;
-import data.models.ContinentsResponse;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import steps.ContinentsSteps;
@@ -16,7 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.codehaus.groovy.runtime.DefaultGroovyMethods.unique;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 

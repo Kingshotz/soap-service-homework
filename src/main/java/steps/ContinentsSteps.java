@@ -1,7 +1,6 @@
 package steps;
 
 import data.Constants;
-import data.models.ContinentsResponse;
 import io.restassured.path.xml.XmlPath;
 
 import static io.restassured.RestAssured.given;

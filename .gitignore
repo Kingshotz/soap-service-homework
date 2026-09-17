@@ -1,6 +1,8 @@
 .idea/
 *.iml
 target/
+allure-results/
+allure-report/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
