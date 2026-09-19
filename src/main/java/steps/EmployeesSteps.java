@@ -5,29 +5,11 @@ import Util.SoapServiceSender;
 import Util.Unmarshall;
 import com.example.springboot.soap.interfaces.*;
 import data.Constants;
+import db.models.Employee;
 import io.restassured.path.xml.XmlPath;
 
-/*
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:int="http://interfaces.soap.springboot.example.com">
-   <soapenv:Header/>
-   <soapenv:Body>
-      <int:addEmployeeRequest>
-         <int:employeeInfo>
-            <int:employeeId>?</int:employeeId>
-            <int:name>?</int:name>
-            <int:department>?</int:department>
-            <!--Optional:-->
-            <int:phone>?</int:phone>
-            <!--Optional:-->
-            <int:address>?</int:address>
-            <int:salary>?</int:salary>
-            <int:email>?</int:email>
-            <int:birthDate>?</int:birthDate>
-         </int:employeeInfo>
-      </int:addEmployeeRequest>
-   </soapenv:Body>
-</soapenv:Envelope>
-* */
+import static config.DataBaseConfig.dbMapper;
+
 public class EmployeesSteps {
     ObjectFactory  objectFactory;
 
@@ -58,8 +40,9 @@ public class EmployeesSteps {
                 .asString();
         return Unmarshall.unmarshallResponse(response,GetEmployeeByIdResponse.class);
     }
-    public UpdateEmployeeResponse updateEmployee(EmployeeInfo employeeInfo){
+    public UpdateEmployeeResponse updateEmployee(EmployeeInfo employeeInfo, long id){
         UpdateEmployeeRequest request = objectFactory.createUpdateEmployeeRequest();
+        employeeInfo.setEmployeeId(id);
         request.setEmployeeInfo(employeeInfo);
         String body = Marshall.marshallSoapRequest(request);
         String response = SoapServiceSender.send(
@@ -96,4 +79,23 @@ public class EmployeesSteps {
                 .asString();
         return new XmlPath(response);
     }
+    public Employee insertEmployeeDb(Employee employee){
+        dbMapper().insertEmployee(employee);
+        return employee;
+    }
+    public Employee getEmployeeDb(long id){
+        Employee  employee = dbMapper().getEmployeeById(id);
+        employee.setEmployeeId(id);
+        return employee;
+    }
+    public Employee updateEmployeeDb(Employee employee,long id){
+        employee.setEmployeeId(id);
+        dbMapper().UpdateEmployee(employee);
+        return employee;
+    }
+    public int getEmployeeCount(){
+        return dbMapper().count();
+    }
+    
+
 }

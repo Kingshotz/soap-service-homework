@@ -20,7 +20,13 @@ public class Constants {
     SUECESS_DELETE_MESSAGE = "Content Deleted Successfully",
     BODY_FAULT_CODE = "SOAP-ENV:Server",
     BODY_FAULT_STRING = "Source must not be null",
-    CONTINENTS_ROOT_PATH = "ArrayOftContinent";
+    CONTINENTS_ROOT_PATH = "ArrayOftContinent",
+    CONNECTION_STRING = "jdbc:h2:tcp://localhost:9093/./companyDB;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE;MODE=MSSQLServer;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE",
+    DRIVER = "org.h2.Driver",
+    AUTH_BASE_URL = "http://localhost:8086",
+            SOAP_SERVICE_ERROR = "SOAP Service Error"                    ,
+    HELLO_MESSAGE = "Hello",
+    SUECESS_CHANGE_MESSAGE = "changed successfully";
 
 
     public static final int CONTINENTS_COUNT = 6;

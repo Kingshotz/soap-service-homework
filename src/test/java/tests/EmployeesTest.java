@@ -1,19 +1,19 @@
 package tests;
 
-import Util.Util;
-import com.example.springboot.soap.interfaces.*;
+import Util.Generator;
+import com.example.springboot.soap.interfaces.DeleteEmployeeResponse;
+import com.example.springboot.soap.interfaces.EmployeeInfo;
+import com.example.springboot.soap.interfaces.GetEmployeeByIdResponse;
+import com.example.springboot.soap.interfaces.UpdateEmployeeResponse;
 import data.Constants;
-import io.qameta.allure.Description;
-import io.qameta.allure.Epic;
-import io.qameta.allure.Feature;
-import io.qameta.allure.Story;
-import io.restassured.path.xml.XmlPath;
+import db.models.Employee;
+import io.qameta.allure.*;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import steps.AuthSteps;
 import steps.EmployeesSteps;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.hamcrest.Matchers.equalTo;
 
 @Epic("Employee Management System")
@@ -21,85 +21,66 @@ import static org.hamcrest.Matchers.equalTo;
 public class EmployeesTest {
 
     private EmployeesSteps employeesSteps;
-    private EmployeeInfo employeeInfo;
+    private Employee employee;
+    AuthSteps authSteps;
 
     @BeforeClass
     public void beforeClass() {
         employeesSteps = new EmployeesSteps();
-        employeeInfo = Util.createEmployeeInfo();
+        authSteps = new AuthSteps();
     }
 
     @Test(priority = 1)
-    @Story("Add Employee")
-    @Description("Verify that a new employee can be successfully created via SOAP request.")
+    @Story("Get Employee By ID Validation")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Inserts a new employee into DB using MyBatis mapper, sends getEmployeeById SOAP request, and validates returned employee details against database record.")
     public void addEmployee() {
-        AddEmployeeResponse response = employeesSteps.addEmployee(employeeInfo);
-
-        assertThat(response.getServiceStatus().getMessage(), equalTo(Constants.SUECESS_ADD_EMPLOYEE_MESSAGE));
-        assertThat(response.getServiceStatus().getStatus(), equalTo(Constants.SUCCESS_STATUS));
+        employee = employeesSteps.insertEmployeeDb(Generator.GenerateEmployee());
+        System.out.println(employee.getEmployeeId());
+        GetEmployeeByIdResponse response = employeesSteps.getEmployeeById(employee.getEmployeeId());
+        assertThat(employee.getEmployeeId(), equalTo(response.getEmployeeInfo().getEmployeeId()));
+        assertThat(employee.getName(), equalTo(response.getEmployeeInfo().getName()));
+        assertThat(employee.getEmail(), equalTo(response.getEmployeeInfo().getEmail()));
     }
 
     @Test(priority = 2)
-    @Story("Get Employee By ID")
-    @Description("Verify that employee details retrieved by ID match the created employee payload.")
-    public void getEmployeeById() {
-        GetEmployeeByIdResponse response = employeesSteps.getEmployeeById(employeeInfo.getEmployeeId());
+    @Story("Update Employee via SOAP Service")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Constructs SOAP update request body with updated details, sends request, ensures SUCCESS status, and validates updated details directly in database.")
+    public void UpdateEmployeeFromService(){
+        EmployeeInfo updatedEmployeeInfo = Generator.createEmployeeInfo();
+        UpdateEmployeeResponse updateEmployeeResponse = employeesSteps.updateEmployee(updatedEmployeeInfo,employee.getEmployeeId());
+        assertThat(updateEmployeeResponse.getServiceStatus().getStatus(),equalTo(Constants.SUCCESS_STATUS));
 
-        assertThat(response.getEmployeeInfo().getEmployeeId(), equalTo(employeeInfo.getEmployeeId()));
-        assertThat(response.getEmployeeInfo().getName(), equalTo(employeeInfo.getName()));
-        assertThat(response.getEmployeeInfo().getDepartment(), equalTo(employeeInfo.getDepartment()));
-        assertThat(response.getEmployeeInfo().getPhone(), equalTo(employeeInfo.getPhone()));
-        assertThat(response.getEmployeeInfo().getAddress(), equalTo(employeeInfo.getAddress()));
-        assertThat(response.getEmployeeInfo().getSalary(), comparesEqualTo(employeeInfo.getSalary()));
-        assertThat(response.getEmployeeInfo().getEmail(), equalTo(employeeInfo.getEmail()));
-        assertThat(response.getEmployeeInfo().getBirthDate(), equalTo(employeeInfo.getBirthDate()));
+        employee = employeesSteps.getEmployeeDb(updatedEmployeeInfo.getEmployeeId());
+
+        assertThat(employee.getName(),equalTo(updatedEmployeeInfo.getName()));
+        assertThat(employee.getEmail(),equalTo(updatedEmployeeInfo.getEmail()));
     }
 
     @Test(priority = 3)
-    @Story("Update Employee")
-    @Description("Verify that an existing employee record can be updated with new details.")
-    public void updateEmployee() {
-        long id = employeeInfo.getEmployeeId();
-        employeeInfo = Util.createEmployeeInfo();
-        employeeInfo.setEmployeeId(id);
+    @Story("Update Employee via Database Query")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Updates employee directly in database, then calls getEmployeeById SOAP service to validate updated details are correctly returned by SOAP service.")
+    public void updateEmployeeFromDb() {
+        long id =employee.getEmployeeId();
+        employee = employeesSteps.updateEmployeeDb(Generator.GenerateEmployee(),id);
+        GetEmployeeByIdResponse response = employeesSteps.getEmployeeById(employee.getEmployeeId());
 
-        UpdateEmployeeResponse response = employeesSteps.updateEmployee(employeeInfo);
-
-        assertThat(response.getServiceStatus().getMessage(), equalTo(Constants.SUECESS_UPDATE_EMPLOYEE_MESSAGE));
-        assertThat(response.getServiceStatus().getStatus(), equalTo(Constants.SUCCESS_STATUS));
+        assertThat(employee.getEmployeeId(), equalTo(response.getEmployeeInfo().getEmployeeId()));
+        assertThat(employee.getName(), equalTo(response.getEmployeeInfo().getName()));
+        assertThat(employee.getEmail(), equalTo(response.getEmployeeInfo().getEmail()));
     }
 
     @Test(priority = 4)
-    @Story("Update Employee")
-    @Description("Verify that previously updated employee details persist correctly in the system.")
-    public void checkUpdate() {
-        getEmployeeById();
-    }
-
-    @Test(priority = 5)
-    @Story("Delete Employee")
-    @Description("Verify that an employee can be soft/hard deleted from the system by ID.")
-    public void deleteEmployee() {
-        DeleteEmployeeResponse response = employeesSteps.deleteEmployee(employeeInfo.getEmployeeId());
-
-        assertThat(response.getServiceStatus().getMessage(), equalTo(Constants.SUECESS_DELETE_MESSAGE));
-        assertThat(response.getServiceStatus().getStatus(), equalTo(Constants.SUCCESS_STATUS));
-    }
-
-    @Test(priority = 6)
-    @Story("Delete Employee")
-    @Description("Verify that fetching a deleted employee returns a proper SOAP Fault response.")
-    public void checkDelete() {
-        XmlPath response = employeesSteps.getInvalidEmployee(employeeInfo.getEmployeeId());
-
-        assertThat(
-                response.getString("Envelope.Body.Fault.faultcode"),
-                equalTo(Constants.BODY_FAULT_CODE)
-        );
-
-        assertThat(
-                response.getString("Envelope.Body.Fault.faultstring"),
-                equalTo(Constants.BODY_FAULT_STRING)
-        );
+    @Story("Delete Employee via SOAP Service")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Constructs SOAP delete request with employeeId, sends request, validates response status, and verifies employee row count in database decreased by 1.")
+    public void deleteEmployeeFromService() {
+        int countBefore = employeesSteps.getEmployeeCount();
+        DeleteEmployeeResponse deleteEmployeeResponse = employeesSteps.deleteEmployee(employee.getEmployeeId());
+        assertThat(deleteEmployeeResponse.getServiceStatus().getStatus(),equalTo(Constants.SUCCESS_STATUS));
+        int countAfter = employeesSteps.getEmployeeCount();
+        assertThat(countBefore - 1, equalTo(countAfter));
     }
 }

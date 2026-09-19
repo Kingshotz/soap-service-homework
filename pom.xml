@@ -11,32 +11,82 @@
     <properties>
         <maven.compiler.source>26</maven.compiler.source>
         <maven.compiler.target>26</maven.compiler.target>
-        <lombok.version>1.18.38</lombok.version>
-        <allure.version>2.29.1</allure.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <lombok.version>1.18.48</lombok.version>
+        <allure.version>2.29.1</allure.version>
+        <allure.maven.version>2.15.2</allure.maven.version>
+        <aspectj.version>1.9.24</aspectj.version>
+
+        <swagger-annotations.version>2.2.54</swagger-annotations.version>
+        <jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
+        <jackson-databind-nullable.version>0.2.11</jackson-databind-nullable.version>
+        <openapi-generator-maven-plugin.version>7.25.0</openapi-generator-maven-plugin.version>
+
+        <!-- Single source of truth: surefire writes here, allure-maven reads here -->
+        <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
     </properties>
+
+    <!-- Keeps every allure-* artifact on the same version, so allure-commons
+         is never pulled in at two different versions by transitive resolution. -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.qameta.allure</groupId>
+                <artifactId>allure-bom</artifactId>
+                <version>${allure.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
+        <!-- ==================== -->
+        <!-- Test framework       -->
+        <!-- ==================== -->
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>7.12.0</version>
         </dependency>
-        <dependency>
-            <groupId>com.github.javafaker</groupId>
-            <artifactId>javafaker</artifactId>
-            <version>1.0.2</version>
-            <scope>compile</scope>
-        </dependency>
+
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <version>6.0.1</version>
         </dependency>
+
         <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.22.1</version>
+            <groupId>com.github.javafaker</groupId>
+            <artifactId>javafaker</artifactId>
+            <version>1.0.2</version>
         </dependency>
+
+        <!-- ==================== -->
+        <!-- Allure               -->
+        <!-- ==================== -->
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-testng</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-rest-assured</artifactId>
+        </dependency>
+
+        <!-- Required so @Step / @Attachment / Allure.step() actually record.
+             Also puts the weaver jar in the local repo for the -javaagent path below. -->
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>${aspectj.version}</version>
+        </dependency>
+
+        <!-- ==================== -->
+        <!-- SOAP / JAX-WS        -->
+        <!-- ==================== -->
         <dependency>
             <groupId>jakarta.xml.ws</groupId>
             <artifactId>jakarta.xml.ws-api</artifactId>
@@ -45,11 +95,6 @@
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-core</artifactId>
-            <version>4.0.9</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.xml.bind</groupId>
-            <artifactId>jaxb-impl</artifactId>
             <version>4.0.9</version>
         </dependency>
         <dependency>
@@ -70,6 +115,11 @@
             <version>3.0</version>
         </dependency>
         <dependency>
+            <groupId>org.jvnet.jaxb2_commons</groupId>
+            <artifactId>jaxb2-value-constructor</artifactId>
+            <version>3.0</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.cxf.xjc-utils</groupId>
             <artifactId>cxf-xjc-runtime</artifactId>
             <version>4.2.0</version>
@@ -80,24 +130,98 @@
             <version>4.2.0</version>
         </dependency>
         <dependency>
-            <groupId>org.jvnet.jaxb2_commons</groupId>
-            <artifactId>jaxb2-value-constructor</artifactId>
-            <version>3.0</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.20.0</version>
         </dependency>
         <dependency>
-            <groupId>io.qameta.allure</groupId>
-            <artifactId>allure-testng</artifactId>
-            <version>${allure.version}</version>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.22.1</version>
+        </dependency>
+
+        <!-- ==================== -->
+        <!-- Data                 -->
+        <!-- ==================== -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.4.240</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>3.5.19</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>2.17.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ==================== -->
+        <!-- OpenAPI generated client -->
+        <!-- ==================== -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>${swagger-annotations.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <version>${jakarta.annotation-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openapitools</groupId>
+            <artifactId>jackson-databind-nullable</artifactId>
+            <version>${jackson-databind-nullable.version}</version>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.4</version>
+                <configuration>
+                    <!-- 1. Attach the AspectJ weaver: without it @Step/@Attachment are no-ops.
+                         2. Tell allure-java where to write results. -->
+                    <argLine>
+                        -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
+                    </argLine>
+                    <systemPropertyVariables>
+                        <allure.results.directory>${allure.results.directory}</allure.results.directory>
+                    </systemPropertyVariables>
+                    <!-- Uncomment if your tests only run from a suite file:
+                    <suiteXmlFiles>
+                        <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
+                    </suiteXmlFiles>
+                    -->
+                </configuration>
+            </plugin>
+
+            <!-- Generates the HTML report from the results above:
+                 mvn clean test allure:report   (target/site/allure-maven-plugin)
+                 mvn allure:serve               (opens it in a browser) -->
+            <plugin>
+                <groupId>io.qameta.allure</groupId>
+                <artifactId>allure-maven</artifactId>
+                <version>${allure.maven.version}</version>
+                <configuration>
+                    <reportVersion>${allure.version}</reportVersion>
+                    <resultsDirectory>${allure.results.directory}</resultsDirectory>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-codegen-plugin</artifactId>
@@ -107,23 +231,11 @@
                         <id>generate-employees</id>
                         <phase>generate-sources</phase>
                         <configuration>
-                            <!--                            <additionalJvmArgs>-Djavax.xml.accessExternalDTD=all -Djavax.xml.accessExternalSchema=all</additionalJvmArgs>-->
                             <sourceRoot>${project.build.directory}/generated-sources/employees</sourceRoot>
                             <wsdlOptions>
                                 <wsdlOption>
                                     <wsdl>${project.basedir}/src/main/resources/employees.wsdl</wsdl>
                                 </wsdlOption>
-                                <!--                                <wsdlOption>-->
-                                <!--                                    <wsdl>some_wsdl_url</wsdl>-->
-                                <!--                                    <extraargs>-->
-                                <!--                                        <extraarg>-validate</extraarg>-->
-                                <!--                                        <extraarg>-xjc-Xfluent-api</extraarg>-->
-                                <!--                                        <extraarg>-xjc-Xts:style:org.apache.commons.lang3.builder.ToStringStyle.DEFAULT_STYLE</extraarg>-->
-                                <!--                                    </extraargs>-->
-                                <!--                                    <bindingFiles>-->
-                                <!--                                        <bindingFile>http://www.w3.org/2001/XMLSchema.xsd</bindingFile>-->
-                                <!--                                    </bindingFiles>-->
-                                <!--                                </wsdlOption>-->
                             </wsdlOptions>
                         </configuration>
                         <goals>
@@ -159,9 +271,11 @@
                     </dependency>
                 </dependencies>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.14.0</version>
                 <configuration>
                     <annotationProcessorPaths>
                         <path>
@@ -171,6 +285,39 @@
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>${openapi-generator-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>generate-auth-api-client</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/authapi.yaml</inputSpec>
+                            <output>${project.build.directory}/generated-sources/auth</output>
+                            <invokerPackage>auth.api.invoker</invokerPackage>
+                            <apiPackage>auth.api.api</apiPackage>
+                            <modelPackage>auth.api.model</modelPackage>
+                            <generatorName>java</generatorName>
+                            <generateApiTests>false</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
+                            <additionalProperties>
+                                hideGenerationTimestamp=true
+                            </additionalProperties>
+                            <configOptions>
+                                <library>rest-assured</library>
+                                <serializationLibrary>jackson</serializationLibrary>
+                                <useJakartaEe>true</useJakartaEe>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

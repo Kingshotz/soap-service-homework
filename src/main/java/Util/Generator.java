@@ -1,8 +1,10 @@
 package Util;
 
+import auth.api.model.RegisterUserRequest;
 import com.example.springboot.soap.interfaces.EmployeeInfo;
 import com.example.springboot.soap.interfaces.ObjectFactory;
 import com.github.javafaker.Faker;
+import db.models.Employee;
 
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -10,7 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 
-public class Util {
+public class Generator {
     private static final ObjectFactory objectFactory = new ObjectFactory();
     private static final Faker faker = new Faker();
 
@@ -42,5 +44,30 @@ public class Util {
         }catch (Exception e){
             throw new RuntimeException(e);
         }
+    }
+    public static Employee GenerateEmployee(){
+        Employee employee = new Employee();
+        employee.setName(faker.name().fullName());
+        employee.setEmail(faker.internet().emailAddress());
+        employee.setPhone(faker.phoneNumber().cellPhone());
+        employee.setAddress(faker.address().fullAddress());
+        employee.setDepartment(faker.job().title());
+        employee.setSalary(BigDecimal.valueOf(faker.number().numberBetween(1000, 10000)));
+        employee.setBirthDate(faker.date().birthday(18, 65).toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+        return employee;
+    }
+    public static auth.api.model.RegisterUserRequest generateRegisterUserRequest(){
+        return new RegisterUserRequest()
+                .firstname(faker.name().firstName())
+                .lastname(faker.name().lastName())
+                .email(faker.internet().emailAddress())
+                .password(generatePassword())
+                .role(RegisterUserRequest.RoleEnum.ADMIN);
+    }
+    public static String generatePassword(){
+        return faker.internet().password()+"Aa1!";
+    }
+    public static String generateEmail(){
+        return faker.internet().emailAddress();
     }
 }
